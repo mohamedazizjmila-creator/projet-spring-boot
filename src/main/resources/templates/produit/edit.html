@@ -1,0 +1,731 @@
+<!DOCTYPE html>
+<html lang="fr" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Modifier Produit - Gestion de Stock</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        /* Gardez tous vos styles CSS existants */
+        :root {
+            --primary-color: #3498db;
+            --secondary-color: #2c3e50;
+            --success-color: #2ecc71;
+            --warning-color: #f39c12;
+            --danger-color: #e74c3c;
+            --light-bg: #f8f9fa;
+            --sidebar-width: 250px;
+        }
+        
+        body {
+            background-color: var(--light-bg);
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 0;
+            min-height: 100vh;
+        }
+        
+        .navbar {
+            background-color: var(--secondary-color) !important;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            height: 60px;
+        }
+        
+        .navbar-brand {
+            font-weight: 700;
+            font-size: 1.5rem;
+            color: white !important;
+        }
+        
+        .user-info {
+            color: white;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .app-container {
+            display: flex;
+            min-height: calc(100vh - 60px);
+        }
+        
+        .sidebar {
+            width: var(--sidebar-width);
+            background-color: white;
+            box-shadow: 2px 0 10px rgba(0,0,0,0.05);
+            padding: 20px 0;
+            position: sticky;
+            top: 60px;
+            height: calc(100vh - 60px);
+            overflow-y: auto;
+        }
+        
+        .nav-link {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px 20px;
+            color: #555;
+            text-decoration: none;
+            border-radius: 8px;
+            transition: all 0.3s ease;
+            font-weight: 500;
+        }
+        
+        .nav-link:hover {
+            background-color: #f0f7ff;
+            color: var(--primary-color);
+            transform: translateX(5px);
+        }
+        
+        .nav-link.active {
+            background-color: var(--primary-color);
+            color: white;
+        }
+        
+        .main-content {
+            flex: 1;
+            padding: 30px;
+            overflow-y: auto;
+        }
+        
+        /* Styles spécifiques pour l'édition */
+        .image-container {
+            position: relative;
+            width: 250px;
+            height: 250px;
+            margin: 0 auto;
+        }
+        
+        .current-image {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+            border: 2px solid #dee2e6;
+            border-radius: 8px;
+            background-color: #f8f9fa;
+        }
+        
+        .image-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.5);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            opacity: 0;
+            transition: opacity 0.3s;
+            border-radius: 8px;
+        }
+        
+        .image-container:hover .image-overlay {
+            opacity: 1;
+        }
+        
+        .image-actions {
+            display: flex;
+            gap: 10px;
+        }
+        
+        .no-image {
+            width: 250px;
+            height: 250px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            border: 2px dashed #dee2e6;
+            border-radius: 8px;
+            background-color: #f8f9fa;
+            color: #6c757d;
+        }
+        
+        .no-image i {
+            font-size: 48px;
+            margin-bottom: 10px;
+        }
+        
+        /* Prévisualisation nouvelle image */
+        .image-preview {
+            width: 200px;
+            height: 200px;
+            border: 2px dashed #ddd;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+            margin-top: 10px;
+        }
+        
+        .image-preview img {
+            max-width: 100%;
+            max-height: 100%;
+            object-fit: contain;
+        }
+        
+        .image-placeholder {
+            color: #999;
+            text-align: center;
+        }
+        
+        .image-placeholder i {
+            font-size: 48px;
+            margin-bottom: 10px;
+        }
+    </style>
+</head>
+<body>
+    <!-- Navigation Bar -->
+    <nav class="navbar navbar-expand-lg navbar-dark">
+        <div class="container-fluid">
+            <a class="navbar-brand" href="/">
+                <i class="fas fa-boxes"></i> StockManager
+            </a>
+            
+            <div class="d-flex align-items-center">
+                <div class="user-info">
+                    <div class="badge bg-light text-dark">
+                        <i class="fas fa-user-circle"></i>
+                        <span th:text="${currentUser?.username}">Utilisateur</span>
+                        <span class="badge bg-secondary ms-2" th:text="${currentUser?.role}">USER</span>
+                    </div>
+                    <button class="btn btn-outline-light btn-sm ms-3" onclick="logout()">
+                        <i class="fas fa-sign-out-alt"></i> Déconnexion
+                    </button>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Application Container -->
+    <div class="app-container">
+        <!-- Sidebar Menu -->
+        <div class="sidebar">
+            <div class="p-3 border-bottom">
+                <h5 class="mb-0"><i class="fas fa-bars me-2"></i> Menu Principal</h5>
+            </div>
+            
+            <div class="p-3">
+                <ul class="nav flex-column">
+                    <li class="nav-item mb-2">
+                        <a class="nav-link" href="/">
+                            <i class="fas fa-home"></i> Tableau de bord
+                        </a>
+                    </li>
+                    <li class="nav-item mb-2">
+                        <a class="nav-link" href="/produits">
+                            <i class="fas fa-box"></i> Produits
+                        </a>
+                    </li>
+                    <li class="nav-item mb-2">
+                        <a class="nav-link" href="/categories">
+                            <i class="fas fa-tags"></i> Catégories
+                        </a>
+                    </li>
+                    <li class="nav-item mb-2">
+                        <a class="nav-link" href="/produits/add">
+                            <i class="fas fa-plus-circle"></i> Ajouter un produit
+                        </a>
+                    </li>
+                    <li class="nav-item mb-2">
+                        <a class="nav-link" href="/categories/add">
+                            <i class="fas fa-folder-plus"></i> Ajouter une catégorie
+                        </a>
+                    </li>
+                    <li class="nav-item mb-2">
+                        <a class="nav-link" href="/stats">
+                            <i class="fas fa-chart-bar"></i> Statistiques
+                        </a>
+                    </li>
+                    <li class="nav-item mb-2" th:if="${currentUser?.role == 'ADMIN'}">
+                        <a class="nav-link" href="/admin/users">
+                            <i class="fas fa-users-cog"></i> Gestion Utilisateurs
+                        </a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- Main Content -->
+        <div class="main-content">
+            <div class="container mt-4">
+                <h2><i class="fas fa-edit me-2"></i>Modifier le Produit</h2>
+                
+                <!-- Messages de succès/erreur -->
+                <div th:if="${success}" class="alert alert-success alert-dismissible fade show" role="alert">
+                    <i class="fas fa-check-circle me-2"></i>
+                    <span th:text="${success}"></span>
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>
+                
+                <div th:if="${error}" class="alert alert-danger alert-dismissible fade show" role="alert">
+                    <i class="fas fa-exclamation-circle me-2"></i>
+                    <span th:text="${error}"></span>
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>
+                
+                <div class="card shadow-sm">
+                    <div class="card-header bg-warning text-white">
+                        <h5 class="mb-0"><i class="fas fa-pencil-alt me-2"></i>Modification du produit</h5>
+                    </div>
+                    <div class="card-body">
+                        <!-- AJOUTEZ enctype="multipart/form-data" -->
+                        <form th:action="@{/produits/update}" method="POST" th:object="${produit}" enctype="multipart/form-data">
+                            <input type="hidden" th:field="*{id}">
+                            
+                            <div class="row">
+                                <div class="col-md-8">
+                                    <!-- Informations de base -->
+                                    <div class="mb-3">
+                                        <label class="form-label"><i class="fas fa-tag me-1"></i> Nom du produit *</label>
+                                        <input type="text" class="form-control" th:field="*{nom}" 
+                                               placeholder="Ex: Téléphone Samsung Galaxy" required>
+                                        <div class="form-text">Nom unique du produit</div>
+                                    </div>
+                                    
+                                    <div class="mb-3">
+                                        <label class="form-label"><i class="fas fa-align-left me-1"></i> Description</label>
+                                        <textarea class="form-control" th:field="*{description}" 
+                                                  rows="4" placeholder="Description détaillée du produit..."></textarea>
+                                        <div class="form-text">Décrivez les caractéristiques du produit</div>
+                                    </div>
+                                    
+                                    <div class="row">
+                                        <div class="col-md-6 mb-3">
+                                            <label class="form-label"><i class="fas fa-euro-sign me-1"></i> Prix (€) *</label>
+                                            <div class="input-group">
+                                                <input type="number" step="0.01" class="form-control" 
+                                                       th:field="*{prix}" placeholder="0.00" min="0" required>
+                                                <span class="input-group-text">€</span>
+                                            </div>
+                                            <div class="form-text">Prix unitaire en euros</div>
+                                        </div>
+                                        
+                                        <div class="col-md-6 mb-3">
+                                            <label class="form-label"><i class="fas fa-boxes me-1"></i> Quantité *</label>
+                                            <input type="number" class="form-control" th:field="*{quantite}" 
+                                                   placeholder="0" min="0" required>
+                                            <div class="form-text">Quantité en stock</div>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="mb-3">
+                                        <label class="form-label"><i class="fas fa-tags me-1"></i> Catégorie *</label>
+                                        <select class="form-select" name="categorieId" required>
+                                            <option value="">Sélectionnez une catégorie</option>
+                                            <option th:each="cat : ${categories}" 
+                                                    th:value="${cat.id}" 
+                                                    th:selected="${cat.id == produit.categorie?.id}"
+                                                    th:text="${cat.nom}">
+                                            </option>
+                                        </select>
+                                        <div class="form-text">Catégorie principale du produit</div>
+                                    </div>
+                                </div>
+                                
+                                <div class="col-md-4">
+                                    <!-- Section Image -->
+                                    <div class="mb-3">
+                                        <label class="form-label"><i class="fas fa-image me-1"></i> Image du produit</label>
+                                        
+                                        <!-- Image actuelle -->
+                                        <div th:if="${produit.imageUrl}">
+                                            <p class="text-muted small mb-2">Image actuelle:</p>
+                                            <div class="image-container mb-3">
+                                                <img th:src="@{${produit.imageUrl}}" 
+                                                     alt="Image du produit" 
+                                                     class="current-image">
+                                                <div class="image-overlay">
+                                                    <div class="image-actions">
+                                                        <a th:href="@{${produit.imageUrl}}" 
+                                                           target="_blank" 
+                                                           class="btn btn-sm btn-light">
+                                                            <i class="fas fa-expand"></i>
+                                                        </a>
+                                                        <button type="button" 
+                                                                class="btn btn-sm btn-danger" 
+                                                                onclick="toggleRemoveImage()">
+                                                            <i class="fas fa-trash"></i>
+                                                        </button>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            
+                                            <!-- Checkbox pour supprimer l'image -->
+                                            <div class="form-check mb-3" id="removeImageSection" style="display: none;">
+                                                <input class="form-check-input" type="checkbox" 
+                                                       name="removeImage" id="removeImage">
+                                                <label class="form-check-label text-danger" for="removeImage">
+                                                    <i class="fas fa-exclamation-triangle me-1"></i>
+                                                    Supprimer cette image
+                                                </label>
+                                                <div class="form-text small">
+                                                    L'image sera définitivement supprimée du serveur
+                                                </div>
+                                            </div>
+                                        </div>
+                                        
+                                        <!-- Pas d'image actuelle -->
+                                        <div th:unless="${produit.imageUrl}" class="mb-3">
+                                            <div class="no-image">
+                                                <i class="fas fa-image"></i>
+                                                <p>Aucune image</p>
+                                            </div>
+                                        </div>
+                                        
+                                        <!-- Upload nouvelle image -->
+                                        <div class="mt-3">
+                                            <label class="form-label">
+                                                <i class="fas fa-upload me-1"></i>
+                                                <span th:if="${produit.imageUrl}">Changer l'image</span>
+                                                <span th:unless="${produit.imageUrl}">Ajouter une image</span>
+                                            </label>
+                                            <input type="file" class="form-control" id="imageFile" 
+                                                   name="imageFile" accept="image/*" 
+                                                   onchange="previewNewImage(event)" 
+                                                   th:disabled="${produit.imageUrl != null} ? false : false">
+                                            <div class="form-text">
+                                                Formats acceptés: JPG, PNG, GIF<br>
+                                                Taille max: 5MB
+                                                <span th:if="${produit.imageUrl}" class="text-warning">
+                                                    <br><i class="fas fa-info-circle"></i> 
+                                                    Sélectionner une nouvelle image remplacera l'actuelle
+                                                </span>
+                                            </div>
+                                            
+                                            <!-- Prévisualisation nouvelle image -->
+                                            <div class="image-preview mt-3" id="newImagePreviewContainer" style="display: none;">
+                                                <div class="image-placeholder" id="newImagePlaceholder">
+                                                    <i class="fas fa-image"></i>
+                                                    <p>Aperçu de la nouvelle image</p>
+                                                </div>
+                                                <img id="newImagePreview" style="display: none;">
+                                            </div>
+                                        </div>
+                                    </div>
+                                    
+                                    <!-- Statistiques du produit -->
+                                    <div class="card bg-light">
+                                        <div class="card-body">
+                                            <h6><i class="fas fa-chart-bar me-1"></i> Informations</h6>
+                                            <ul class="list-unstyled small mb-0">
+                                                <li><strong>ID:</strong> <span th:text="${produit.id}"></span></li>
+                                                <li th:if="${produit.imageName}">
+                                                    <strong>Fichier:</strong> 
+                                                    <span th:text="${produit.imageName}" class="text-truncate d-block"></span>
+                                                </li>
+                                                <li><strong>Dernière modification:</strong> Maintenant</li>
+                                            </ul>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- Boutons d'action -->
+                            <div class="d-flex justify-content-between mt-4">
+                                <div>
+                                    <button type="submit" class="btn btn-warning">
+                                        <i class="fas fa-save me-2"></i> Mettre à jour
+                                    </button>
+                                    <button type="reset" class="btn btn-outline-secondary ms-2">
+                                        <i class="fas fa-redo me-2"></i> Annuler les changements
+                                    </button>
+                                </div>
+                                <div>
+                                    <a th:href="@{/produits/{id}/remove-image(id=${produit.id})}" 
+                                       class="btn btn-outline-danger me-2"
+                                       th:if="${produit.imageUrl}"
+                                       onclick="return confirm('Supprimer définitivement l\\'image ?')">
+                                        <i class="fas fa-trash me-2"></i> Supprimer l'image
+                                    </a>
+                                    <a href="/produits" class="btn btn-secondary">
+                                        <i class="fas fa-times me-2"></i> Retour à la liste
+                                    </a>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+                
+                <!-- Aide rapide -->
+                <div class="card mt-4">
+                    <div class="card-header bg-light">
+                        <h6 class="mb-0"><i class="fas fa-lightbulb me-2"></i> Conseils pour la modification</h6>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-4">
+                                <div class="d-flex">
+                                    <i class="fas fa-image text-primary me-3 mt-1"></i>
+                                    <div>
+                                        <h6>Gestion des images</h6>
+                                        <p class="small text-muted mb-0">
+                                            Vous pouvez remplacer ou supprimer l'image existante.
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="d-flex">
+                                    <i class="fas fa-exclamation-triangle text-warning me-3 mt-1"></i>
+                                    <div>
+                                        <h6>Attention</h6>
+                                        <p class="small text-muted mb-0">
+                                            La suppression d'image est irréversible.
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="d-flex">
+                                    <i class="fas fa-undo text-info me-3 mt-1"></i>
+                                    <div>
+                                        <h6>Annulation</h6>
+                                        <p class="small text-muted mb-0">
+                                            Utilisez "Annuler les changements" pour réinitialiser.
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- JavaScript pour la gestion des images -->
+<script>
+        // Activer/désactiver la suppression d'image
+        function toggleRemoveImage() {
+            const removeSection = document.getElementById('removeImageSection');
+            const fileInput = document.getElementById('imageFile');
+            const newPreview = document.getElementById('newImagePreviewContainer');
+            const newImagePreview = document.getElementById('newImagePreview');
+            const newImagePlaceholder = document.getElementById('newImagePlaceholder');
+            
+            if (!removeSection || !fileInput) {
+                console.error('Éléments DOM non trouvés');
+                return;
+            }
+            
+            if (removeSection.style.display === 'none' || removeSection.style.display === '') {
+                removeSection.style.display = 'block';
+                fileInput.disabled = true;
+                fileInput.value = '';
+                
+                if (newPreview) newPreview.style.display = 'none';
+                if (newImagePreview) newImagePreview.style.display = 'none';
+                if (newImagePlaceholder) newImagePlaceholder.style.display = 'block';
+            } else {
+                removeSection.style.display = 'none';
+                fileInput.disabled = false;
+            }
+        }
+        
+        // Prévisualisation de la nouvelle image
+        function previewNewImage(event) {
+            const input = event.target;
+            const previewContainer = document.getElementById('newImagePreviewContainer');
+            const previewImage = document.getElementById('newImagePreview');
+            const placeholder = document.getElementById('newImagePlaceholder');
+            const removeSection = document.getElementById('removeImageSection');
+            
+            if (!input || !previewContainer || !previewImage || !placeholder) {
+                console.error('Éléments DOM non trouvés pour la prévisualisation');
+                return;
+            }
+            
+            // Désactiver la suppression si on upload une nouvelle image
+            if (removeSection) {
+                removeSection.style.display = 'none';
+                const removeCheckbox = document.getElementById('removeImage');
+                if (removeCheckbox) {
+                    removeCheckbox.checked = false;
+                }
+            }
+            
+            if (input.files && input.files[0]) {
+                const file = input.files[0];
+                
+                // Validation de la taille (max 5MB)
+                const maxSize = 5 * 1024 * 1024; // 5MB
+                if (file.size > maxSize) {
+                    alert('Le fichier est trop volumineux. Taille maximum: 5MB');
+                    input.value = '';
+                    return;
+                }
+                
+                // Validation du type MIME
+                const validTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/jpg', 'image/webp'];
+                if (!validTypes.includes(file.type)) {
+                    alert('Type de fichier non autorisé. Formats acceptés: JPG, PNG, GIF');
+                    input.value = '';
+                    return;
+                }
+                
+                const reader = new FileReader();
+                
+                reader.onload = function(e) {
+                    // Afficher l'image
+                    previewImage.src = e.target.result;
+                    previewImage.style.display = 'block';
+                    placeholder.style.display = 'none';
+                    previewContainer.style.display = 'block';
+                    
+                    // Ajuster la taille de l'aperçu
+                    previewImage.onload = function() {
+                        if (this.naturalWidth > this.naturalHeight) {
+                            this.style.width = '100%';
+                            this.style.height = 'auto';
+                        } else {
+                            this.style.width = 'auto';
+                            this.style.height = '100%';
+                        }
+                    };
+                };
+                
+                reader.onerror = function() {
+                    alert('Erreur lors de la lecture du fichier');
+                    input.value = '';
+                };
+                
+                reader.readAsDataURL(file);
+                
+                // Afficher des informations sur le fichier
+                const fileInfo = document.createElement('div');
+                fileInfo.className = 'mt-2 small text-muted';
+                fileInfo.innerHTML = `
+                    <strong>Nouveau fichier:</strong> ${file.name}<br>
+                    <strong>Taille:</strong> ${(file.size / 1024).toFixed(2)} KB<br>
+                    <strong>Type:</strong> ${file.type}
+                `;
+                
+                // Supprimer l'ancienne info si elle existe
+                const oldInfo = previewContainer.querySelector('.file-info');
+                if (oldInfo) {
+                    oldInfo.remove();
+                }
+                
+                fileInfo.className = 'file-info mt-2 small text-muted';
+                previewContainer.appendChild(fileInfo);
+                
+            } else {
+                // Réinitialiser l'aperçu
+                previewImage.style.display = 'none';
+                placeholder.style.display = 'block';
+                previewContainer.style.display = 'none';
+                
+                const oldInfo = previewContainer.querySelector('.file-info');
+                if (oldInfo) {
+                    oldInfo.remove();
+                }
+            }
+        }
+        
+        // Gérer le changement de la checkbox "removeImage"
+        document.addEventListener('DOMContentLoaded', function() {
+            const removeCheckbox = document.getElementById('removeImage');
+            const fileInput = document.getElementById('imageFile');
+            
+            if (removeCheckbox && fileInput) {
+                removeCheckbox.addEventListener('change', function() {
+                    fileInput.disabled = this.checked;
+                    if (this.checked) {
+                        fileInput.value = '';
+                        const previewContainer = document.getElementById('newImagePreviewContainer');
+                        if (previewContainer) {
+                            previewContainer.style.display = 'none';
+                        }
+                    }
+                });
+            }
+            
+            // Désactiver fileInput si removeImage est déjà coché (après rechargement)
+            if (removeCheckbox && removeCheckbox.checked && fileInput) {
+                fileInput.disabled = true;
+            }
+        });
+        
+        // Fonction de déconnexion
+        async function logout() {
+            try {
+                const response = await fetch('/logout', {
+                    method: 'GET',
+                    credentials: 'same-origin'
+                });
+                
+                if (response.ok || response.redirected) {
+                    // Redirection gérée par le serveur
+                    window.location.href = '/login';
+                } else {
+                    // Fallback manuel
+                    sessionStorage.clear();
+                    localStorage.removeItem('rememberedUsername');
+                    window.location.href = '/login';
+                }
+                
+            } catch (error) {
+                console.error('Erreur lors de la déconnexion:', error);
+                // Fallback en cas d'erreur
+                window.location.href = '/login';
+            }
+        }
+        
+        // Vérifier la session au chargement
+        document.addEventListener('DOMContentLoaded', async function() {
+            try {
+                const response = await fetch('/profile', {
+                    method: 'GET',
+                    credentials: 'same-origin'
+                });
+                
+                // Si on est redirigé vers login, c'est qu'on n'est pas authentifié
+                if (response.redirected && response.url.includes('/login')) {
+                    window.location.href = '/login';
+                    return;
+                }
+                
+                // Si la réponse n'est pas OK, probablement pas authentifié
+                if (!response.ok && response.status !== 401 && response.status !== 403) {
+                    console.warn('Statut de session incertain:', response.status);
+                }
+                
+            } catch (error) {
+                console.error('Erreur de vérification de session:', error);
+                // En cas d'erreur réseau, on laisse l'utilisateur continuer
+                // pour éviter de bloquer l'accès si le serveur a un problème
+            }
+            
+            // Mettre en surbrillance le lien actif
+            const currentPath = window.location.pathname;
+            document.querySelectorAll('.nav-link').forEach(link => {
+                if (link.getAttribute('href')) {
+                    link.classList.remove('active');
+                    
+                    // Gestion spéciale pour la page d'accueil
+                    if (currentPath === '/' && link.getAttribute('href') === '/') {
+                        link.classList.add('active');
+                    }
+                    // Pour les autres pages
+                    else if (currentPath !== '/' && link.getAttribute('href') === currentPath) {
+                        link.classList.add('active');
+                    }
+                    // Pour les chemins qui commencent par...
+                    else if (currentPath.startsWith(link.getAttribute('href')) && link.getAttribute('href') !== '/') {
+                        link.classList.add('active');
+                    }
+                }
+            });
+        });
+    </script>
+    
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

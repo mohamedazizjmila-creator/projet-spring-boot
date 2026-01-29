@@ -1,0 +1,8 @@
+[build]
+builder = "maven"
+
+[deploy]
+startCommand = "java -jar target/*.jar"
+
+[variables]
+DATABASE_URL = "mysql://username:password@hostname:port/database"

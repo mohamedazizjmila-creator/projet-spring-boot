@@ -1,0 +1,478 @@
+<!DOCTYPE html>
+<html lang="fr" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ajouter un Produit - Gestion de Stock</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        /* Gardez tous vos styles CSS existants */
+        :root {
+            --primary-color: #3498db;
+            --secondary-color: #2c3e50;
+            --success-color: #2ecc71;
+            --warning-color: #f39c12;
+            --danger-color: #e74c3c;
+            --light-bg: #f8f9fa;
+            --sidebar-width: 250px;
+        }
+        
+        body {
+            background-color: var(--light-bg);
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 0;
+            min-height: 100vh;
+        }
+        
+        .navbar {
+            background-color: var(--secondary-color) !important;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            height: 60px;
+        }
+        
+        .navbar-brand {
+            font-weight: 700;
+            font-size: 1.5rem;
+            color: white !important;
+        }
+        
+        .user-info {
+            color: white;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .app-container {
+            display: flex;
+            min-height: calc(100vh - 60px);
+        }
+        
+        .sidebar {
+            width: var(--sidebar-width);
+            background-color: white;
+            box-shadow: 2px 0 10px rgba(0,0,0,0.05);
+            padding: 20px 0;
+            position: sticky;
+            top: 60px;
+            height: calc(100vh - 60px);
+            overflow-y: auto;
+        }
+        
+        .nav-link {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px 20px;
+            color: #555;
+            text-decoration: none;
+            border-radius: 8px;
+            transition: all 0.3s ease;
+            font-weight: 500;
+        }
+        
+        .nav-link:hover {
+            background-color: #f0f7ff;
+            color: var(--primary-color);
+            transform: translateX(5px);
+        }
+        
+        .nav-link.active {
+            background-color: var(--primary-color);
+            color: white;
+        }
+        
+        .main-content {
+            flex: 1;
+            padding: 30px;
+            overflow-y: auto;
+        }
+        
+        /* Style pour la prévisualisation d'image */
+        .image-preview {
+            width: 200px;
+            height: 200px;
+            border: 2px dashed #ddd;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+            margin-top: 10px;
+        }
+        
+        .image-preview img {
+            max-width: 100%;
+            max-height: 100%;
+            object-fit: contain;
+        }
+        
+        .image-placeholder {
+            color: #999;
+            text-align: center;
+        }
+        
+        .image-placeholder i {
+            font-size: 48px;
+            margin-bottom: 10px;
+        }
+    </style>
+</head>
+<body>
+    <!-- Navigation Bar -->
+    <nav class="navbar navbar-expand-lg navbar-dark">
+        <div class="container-fluid">
+            <a class="navbar-brand" href="/">
+                <i class="fas fa-boxes"></i> StockManager
+            </a>
+            
+            <div class="d-flex align-items-center">
+                <div class="user-info">
+                    <div class="badge bg-light text-dark">
+                        <i class="fas fa-user-circle"></i>
+                        <span th:text="${currentUser?.username}">Utilisateur</span>
+                        <span class="badge bg-secondary ms-2" th:text="${currentUser?.role}">USER</span>
+                    </div>
+                    <button class="btn btn-outline-light btn-sm ms-3" onclick="logout()">
+                        <i class="fas fa-sign-out-alt"></i> Déconnexion
+                    </button>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Application Container -->
+    <div class="app-container">
+        <!-- Sidebar Menu -->
+        <div class="sidebar">
+            <div class="p-3 border-bottom">
+                <h5 class="mb-0"><i class="fas fa-bars me-2"></i> Menu Principal</h5>
+            </div>
+            
+            <div class="p-3">
+                <ul class="nav flex-column">
+                    <li class="nav-item mb-2">
+                        <a class="nav-link" href="/">
+                            <i class="fas fa-home"></i> Tableau de bord
+                        </a>
+                    </li>
+                    <li class="nav-item mb-2">
+                        <a class="nav-link" href="/produits">
+                            <i class="fas fa-box"></i> Produits
+                        </a>
+                    </li>
+                    <li class="nav-item mb-2">
+                        <a class="nav-link" href="/categories">
+                            <i class="fas fa-tags"></i> Catégories
+                        </a>
+                    </li>
+                    <li class="nav-item mb-2">
+                        <a class="nav-link active" href="/produits/add">
+                            <i class="fas fa-plus-circle"></i> Ajouter un produit
+                        </a>
+                    </li>
+                    <li class="nav-item mb-2">
+                        <a class="nav-link" href="/categories/add">
+                            <i class="fas fa-folder-plus"></i> Ajouter une catégorie
+                        </a>
+                    </li>
+                    <li class="nav-item mb-2">
+                        <a class="nav-link" href="/stats">
+                            <i class="fas fa-chart-bar"></i> Statistiques
+                        </a>
+                    </li>
+                    <li class="nav-item mb-2" th:if="${currentUser?.role == 'ADMIN'}">
+                        <a class="nav-link" href="/admin/users">
+                            <i class="fas fa-users-cog"></i> Gestion Utilisateurs
+                        </a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- Main Content -->
+        <div class="main-content">
+            <div class="container mt-4">
+                <h2><i class="fas fa-plus-circle me-2"></i>Ajouter un Produit</h2>
+                
+                <!-- Messages de succès/erreur -->
+                <div th:if="${success}" class="alert alert-success alert-dismissible fade show" role="alert">
+                    <i class="fas fa-check-circle me-2"></i>
+                    <span th:text="${success}"></span>
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>
+                
+                <div th:if="${error}" class="alert alert-danger alert-dismissible fade show" role="alert">
+                    <i class="fas fa-exclamation-circle me-2"></i>
+                    <span th:text="${error}"></span>
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>
+                
+                <div class="card shadow-sm">
+                    <div class="card-header bg-primary text-white">
+                        <h5 class="mb-0"><i class="fas fa-info-circle me-2"></i>Informations du produit</h5>
+                    </div>
+                    <div class="card-body">
+                        <!-- AJOUTEZ enctype="multipart/form-data" -->
+                        <form th:action="@{/produits/add}" method="POST" th:object="${produit}" enctype="multipart/form-data">
+                            
+                            <div class="row">
+                                <div class="col-md-8">
+                                    <!-- Informations de base -->
+                                    <div class="mb-3">
+                                        <label class="form-label"><i class="fas fa-tag me-1"></i> Nom du produit *</label>
+                                        <input type="text" class="form-control" th:field="*{nom}" 
+                                               placeholder="Ex: Téléphone Samsung Galaxy" required>
+                                        <div class="form-text">Nom unique du produit</div>
+                                    </div>
+                                    
+                                    <div class="mb-3">
+                                        <label class="form-label"><i class="fas fa-align-left me-1"></i> Description</label>
+                                        <textarea class="form-control" th:field="*{description}" 
+                                                  rows="4" placeholder="Description détaillée du produit..."></textarea>
+                                        <div class="form-text">Décrivez les caractéristiques du produit</div>
+                                    </div>
+                                    
+                                    <div class="row">
+                                        <div class="col-md-6 mb-3">
+                                            <label class="form-label"><i class="fas fa-euro-sign me-1"></i> Prix (€) *</label>
+                                            <div class="input-group">
+                                                <input type="number" step="0.01" class="form-control" 
+                                                       th:field="*{prix}" placeholder="0.00" min="0" required>
+                                                <span class="input-group-text">€</span>
+                                            </div>
+                                            <div class="form-text">Prix unitaire en euros</div>
+                                        </div>
+                                        
+                                        <div class="col-md-6 mb-3">
+                                            <label class="form-label"><i class="fas fa-boxes me-1"></i> Quantité *</label>
+                                            <input type="number" class="form-control" th:field="*{quantite}" 
+                                                   placeholder="0" min="0" required>
+                                            <div class="form-text">Quantité en stock</div>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="mb-3">
+                                        <label class="form-label"><i class="fas fa-tags me-1"></i> Catégorie *</label>
+                                        <select class="form-select" name="categorieId" required>
+                                            <option value="">Sélectionnez une catégorie</option>
+                                            <option th:each="cat : ${categories}" 
+                                                    th:value="${cat.id}" 
+                                                    th:text="${cat.nom}">
+                                            </option>
+                                        </select>
+                                        <div class="form-text">Catégorie principale du produit</div>
+                                    </div>
+                                </div>
+                                
+                                <div class="col-md-4">
+                                    <!-- Section Image -->
+                                    <div class="mb-3">
+                                        <label class="form-label"><i class="fas fa-image me-1"></i> Image du produit</label>
+                                        
+                                        <!-- Champ de fichier -->
+                                        <input type="file" class="form-control" id="imageFile" name="imageFile" 
+                                               accept="image/*" onchange="previewImage(event)">
+                                        <div class="form-text">
+                                            Formats acceptés: JPG, PNG, GIF<br>
+                                            Taille max: 5MB
+                                        </div>
+                                        
+                                        <!-- Prévisualisation de l'image -->
+                                        <div class="image-preview mt-3" id="imagePreviewContainer">
+                                            <div class="image-placeholder" id="imagePlaceholder">
+                                                <i class="fas fa-image"></i>
+                                                <p>Aperçu de l'image</p>
+                                            </div>
+                                            <img id="imagePreview" style="display: none;">
+                                        </div>
+                                    </div>
+                                    
+                                    <!-- Informations sur l'upload -->
+                                    <div class="alert alert-info">
+                                        <h6><i class="fas fa-info-circle me-1"></i> Note sur les images:</h6>
+                                        <ul class="mb-0 small">
+                                            <li>L'image sera automatiquement redimensionnée</li>
+                                            <li>Nom de fichier généré automatiquement</li>
+                                            <li>L'image est facultative</li>
+                                        </ul>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- Boutons d'action -->
+                            <div class="d-flex justify-content-between mt-4">
+                                <div>
+                                    <button type="submit" class="btn btn-primary">
+                                        <i class="fas fa-save me-2"></i> Enregistrer le produit
+                                    </button>
+                                    <button type="reset" class="btn btn-outline-secondary ms-2">
+                                        <i class="fas fa-redo me-2"></i> Réinitialiser
+                                    </button>
+                                </div>
+                                <a href="/produits" class="btn btn-secondary">
+                                    <i class="fas fa-times me-2"></i> Annuler
+                                </a>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+                
+                <!-- Aide rapide -->
+                <div class="card mt-4">
+                    <div class="card-header bg-light">
+                        <h6 class="mb-0"><i class="fas fa-question-circle me-2"></i> Conseils</h6>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-4">
+                                <div class="d-flex">
+                                    <i class="fas fa-camera text-primary me-3 mt-1"></i>
+                                    <div>
+                                        <h6>Image du produit</h6>
+                                        <p class="small text-muted mb-0">
+                                            Une image de bonne qualité améliore la présentation.
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="d-flex">
+                                    <i class="fas fa-box text-success me-3 mt-1"></i>
+                                    <div>
+                                        <h6>Gestion du stock</h6>
+                                        <p class="small text-muted mb-0">
+                                            Mettez à jour régulièrement les quantités.
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="d-flex">
+                                    <i class="fas fa-tags text-warning me-3 mt-1"></i>
+                                    <div>
+                                        <h6>Catégorisation</h6>
+                                        <p class="small text-muted mb-0">
+                                            Une bonne catégorie facilite la recherche.
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- JavaScript pour la prévisualisation d'image -->
+    <script>
+        function previewImage(event) {
+            const input = event.target;
+            const previewContainer = document.getElementById('imagePreviewContainer');
+            const previewImage = document.getElementById('imagePreview');
+            const placeholder = document.getElementById('imagePlaceholder');
+            
+            if (input.files && input.files[0]) {
+                const file = input.files[0];
+                const reader = new FileReader();
+                
+                reader.onload = function(e) {
+                    // Afficher l'image
+                    previewImage.src = e.target.result;
+                    previewImage.style.display = 'block';
+                    placeholder.style.display = 'none';
+                    
+                    // Ajuster la taille de l'aperçu
+                    previewImage.onload = function() {
+                        if (this.width > this.height) {
+                            this.style.width = '100%';
+                            this.style.height = 'auto';
+                        } else {
+                            this.style.width = 'auto';
+                            this.style.height = '100%';
+                        }
+                    };
+                }
+                
+                reader.readAsDataURL(file);
+                
+                // Afficher des informations sur le fichier
+                const fileInfo = document.createElement('div');
+                fileInfo.className = 'mt-2 small text-muted';
+                fileInfo.innerHTML = `
+                    <strong>Fichier:</strong> ${file.name}<br>
+                    <strong>Taille:</strong> ${(file.size / 1024).toFixed(2)} KB<br>
+                    <strong>Type:</strong> ${file.type}
+                `;
+                
+                // Supprimer l'ancienne info si elle existe
+                const oldInfo = previewContainer.querySelector('.file-info');
+                if (oldInfo) {
+                    oldInfo.remove();
+                }
+                
+                fileInfo.className = 'file-info mt-2 small text-muted';
+                previewContainer.appendChild(fileInfo);
+                
+            } else {
+                // Réinitialiser l'aperçu
+                previewImage.style.display = 'none';
+                placeholder.style.display = 'block';
+                
+                const oldInfo = previewContainer.querySelector('.file-info');
+                if (oldInfo) {
+                    oldInfo.remove();
+                }
+            }
+        }
+        
+        // Fonction de déconnexion
+        async function logout() {
+            try {
+                await fetch('/api/auth/logout', {
+                    method: 'POST'
+                });
+                
+                sessionStorage.clear();
+                localStorage.removeItem('rememberedUsername');
+                
+                window.location.href = '/login';
+                
+            } catch (error) {
+                console.error('Erreur lors de la déconnexion:', error);
+                window.location.href = '/login';
+            }
+        }
+        
+        // Vérifier la session au chargement
+        document.addEventListener('DOMContentLoaded', async function() {
+            try {
+                const response = await fetch('/api/auth/check-session');
+                const data = await response.json();
+                
+                if (!data.authenticated) {
+                    window.location.href = '/login';
+                }
+            } catch (error) {
+                console.error('Erreur de vérification de session:', error);
+                window.location.href = '/login';
+            }
+            
+            // Mettre en surbrillance le lien actif
+            const currentPath = window.location.pathname;
+            document.querySelectorAll('.nav-link').forEach(link => {
+                link.classList.remove('active');
+                if (link.getAttribute('href') === currentPath) {
+                    link.classList.add('active');
+                }
+            });
+        });
+    </script>
+    
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
