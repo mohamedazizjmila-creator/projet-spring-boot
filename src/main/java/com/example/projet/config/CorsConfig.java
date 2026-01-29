@@ -16,8 +16,10 @@ public class CorsConfig {
                 // Configuration pour les API
                 registry.addMapping("/api/**")
                         .allowedOriginPatterns(
-                            "http://localhost:*",
-                            "http://127.0.0.1:*"
+                            "http://localhost:*",          // React en local
+                            "http://127.0.0.1:*",          // React en local
+                            "https://*.onrender.com",      // TON frontend React sur Render
+                            "https://projet-api-v2.onrender.com"  // Ton backend actuel
                         )
                         .allowedMethods("GET", "POST", "PUT", "DELETE", "OPTIONS")
                         .allowedHeaders("*")
@@ -28,7 +30,8 @@ public class CorsConfig {
                 registry.addMapping("/uploads/**")
                         .allowedOriginPatterns(
                             "http://localhost:*",
-                            "http://127.0.0.1:*"
+                            "http://127.0.0.1:*",
+                            "https://*.onrender.com"
                         )
                         .allowedMethods("GET", "OPTIONS")
                         .allowedHeaders("*")
