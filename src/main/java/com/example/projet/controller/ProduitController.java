@@ -75,7 +75,7 @@ public class ProduitController {
             }
             
             // 4. Retourne la réponse
-            String fullUrl = "https://projet-api-v2.onrender.com/uploads/" + fileName;
+            String fullUrl = "https://projet-api-v2.onrender.com/images/" + fileName;
             Map<String, String> response = new HashMap<>();
             response.put("status", "SUCCESS");
             response.put("imageUrl", fullUrl);
