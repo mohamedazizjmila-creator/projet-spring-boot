@@ -8,6 +8,10 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import java.util.List;
 import java.util.Optional;
+import org.springframework.web.multipart.MultipartFile;
+import com.example.projet.service.FileStorageService;
+import java.util.HashMap;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api/produits")
@@ -16,6 +20,8 @@ public class ProduitController {
     
     @Autowired
     private ProduitService produitService;
+    @Autowired
+    private FileStorageService fileStorageService;
     
     @PostMapping
     public ResponseEntity<Produit> createProduit(@RequestBody Produit produit) {
@@ -38,6 +44,55 @@ public class ProduitController {
             return ResponseEntity.notFound().build();
         }
     }
+    // AJOUTE CETTE MÉTHODE
+    @PostMapping("/upload-image")
+    public ResponseEntity<Map<String, String>> uploadImageForProduct(
+            @RequestParam("productId") Long productId,
+            @RequestParam("image") MultipartFile file) {
+        
+        System.out.println("🚀 Upload image appelé pour produit ID: " + productId);
+        
+        try {
+            // 1. Vérifie le fichier
+            if (file.isEmpty()) {
+                Map<String, String> error = new HashMap<>();
+                error.put("error", "Fichier vide");
+                return ResponseEntity.badRequest().body(error);
+            }
+            
+            // 2. Sauvegarde l'image
+            String fileName = fileStorageService.saveImage(file);
+            System.out.println("✅ Image sauvegardée: " + fileName);
+            
+            // 3. Mets à jour le produit dans la base
+            Optional<Produit> produitOpt = produitService.findById(productId);
+            if (produitOpt.isPresent()) {
+                Produit produit = produitOpt.get();
+                String imageUrl = "/uploads/" + fileName;
+                produit.setImageUrl(imageUrl);
+                produitService.save(produit);
+                System.out.println("✅ Produit mis à jour avec image: " + imageUrl);
+            }
+            
+            // 4. Retourne la réponse
+            String fullUrl = "https://projet-api-v2.onrender.com/uploads/" + fileName;
+            Map<String, String> response = new HashMap<>();
+            response.put("status", "SUCCESS");
+            response.put("imageUrl", fullUrl);
+            response.put("fileName", fileName);
+            
+            return ResponseEntity.ok(response);
+            
+        } catch (Exception e) {
+            System.out.println("❌ Erreur: " + e.getMessage());
+            e.printStackTrace();
+            Map<String, String> error = new HashMap<>();
+            error.put("error", e.getMessage());
+            return ResponseEntity.badRequest().body(error);
+        }
+    }
+
+// NE CHANGE PAS ICI - Ton fichier se termine ici
     
     @PutMapping("/{id}")
     public ResponseEntity<Produit> updateProduit(@PathVariable Long id, @RequestBody Produit produitDetails) {
@@ -139,4 +194,5 @@ public class ProduitController {
         long count = produitService.countEnStock();
         return ResponseEntity.ok(count);
     }
+    
 }
