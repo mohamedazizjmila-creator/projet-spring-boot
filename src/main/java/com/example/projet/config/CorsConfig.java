@@ -13,28 +13,33 @@ public class CorsConfig {
         return new WebMvcConfigurer() {
             @Override
             public void addCorsMappings(CorsRegistry registry) {
-                // Configuration pour les API - AUTORISE TOUT POUR TESTS
+                // Configuration pour les API
                 registry.addMapping("/api/**")
                         .allowedOriginPatterns(
-                            "*", // AUTORISE TOUTES LES ORIGINES (y compris mobile)
                             "http://localhost:*",          // React en local
                             "http://127.0.0.1:*",          // React en local
-                            "http://10.0.2.2:*",           // Android Emulator
-                            "http://10.0.3.2:*",           // Genymotion
-                            "http://192.168.*:*",          // Réseau local WiFi
-                            "https://*.onrender.com",      // Frontend React sur Render
-                            "https://projet-api-v2.onrender.com",  // Ton backend
-                            "https://*.netlify.app",       // NETLIFY
-                            "https://697bf752fb63ccf804122fde--comforting-chimera-70cf77.netlify.app"  // TON SITE NETLIFY
+                            "http://10.0.2.2:*",           // Android Emulator - AJOUTÉ
+                            "https://*.onrender.com",      // Frontend sur Render
+                            "https://projet-api-v2.onrender.com",  // Backend
+                            "https://*.netlify.app",       // Netlify
+                            "https://697bf752fb63ccf804122fde--comforting-chimera-70cf77.netlify.app"  // Site Netlify
                         )
                         .allowedMethods("GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH")
                         .allowedHeaders("*")
                         .allowCredentials(true)
                         .maxAge(3600);
                 
-                // Configuration POUR LES IMAGES
+                // Configuration POUR LES IMAGES (uploads) - PERMET TOUT
                 registry.addMapping("/uploads/**")
-                        .allowedOriginPatterns("*") // AUTORISE TOUT POUR LES IMAGES
+                        .allowedOriginPatterns("*") // PERMET TOUTES LES ORIGINES POUR LES IMAGES
+                        .allowedMethods("GET", "OPTIONS")
+                        .allowedHeaders("*")
+                        .allowCredentials(true)
+                        .maxAge(3600);
+                        
+                // Configuration POUR LES IMAGES (images) - si vous avez aussi /images/
+                registry.addMapping("/images/**")
+                        .allowedOriginPatterns("*")
                         .allowedMethods("GET", "OPTIONS")
                         .allowedHeaders("*")
                         .allowCredentials(true)
