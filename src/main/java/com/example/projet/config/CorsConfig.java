@@ -18,28 +18,25 @@ public class CorsConfig {
                         .allowedOriginPatterns(
                             "http://localhost:*",          // React en local
                             "http://127.0.0.1:*",          // React en local
-                            "http://10.0.2.2:*",           // Android Emulator - AJOUTÉ
-                            "https://*.onrender.com",      // Frontend sur Render
-                            "https://projet-api-v2.onrender.com",  // Backend
-                            "https://*.netlify.app",       // Netlify
-                            "https://697bf752fb63ccf804122fde--comforting-chimera-70cf77.netlify.app"  // Site Netlify
+                            "https://*.onrender.com",      // TON frontend React sur Render
+                            "https://projet-api-v2.onrender.com",  // Ton backend actuel
+                            "https://*.netlify.app",       // NETLIFY - AJOUTÉ!
+                            "https://697bf752fb63ccf804122fde--comforting-chimera-70cf77.netlify.app"  // TON SITE NETLIFY EXACT
                         )
                         .allowedMethods("GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH")
                         .allowedHeaders("*")
                         .allowCredentials(true)
                         .maxAge(3600);
                 
-                // Configuration POUR LES IMAGES (uploads) - PERMET TOUT
+                // Configuration POUR LES IMAGES (uploads)
                 registry.addMapping("/uploads/**")
-                        .allowedOriginPatterns("*") // PERMET TOUTES LES ORIGINES POUR LES IMAGES
-                        .allowedMethods("GET", "OPTIONS")
-                        .allowedHeaders("*")
-                        .allowCredentials(true)
-                        .maxAge(3600);
-                        
-                // Configuration POUR LES IMAGES (images) - si vous avez aussi /images/
-                registry.addMapping("/images/**")
-                        .allowedOriginPatterns("*")
+                        .allowedOriginPatterns(
+                            "http://localhost:*",
+                            "http://127.0.0.1:*",
+                            "https://*.onrender.com",
+                            "https://*.netlify.app",       // NETLIFY - AJOUTÉ!
+                            "https://697bf752fb63ccf804122fde--comforting-chimera-70cf77.netlify.app"  // TON SITE NETLIFY EXACT
+                        )
                         .allowedMethods("GET", "OPTIONS")
                         .allowedHeaders("*")
                         .allowCredentials(true)
