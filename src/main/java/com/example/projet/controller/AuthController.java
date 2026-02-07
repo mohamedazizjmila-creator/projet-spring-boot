@@ -462,7 +462,7 @@ public class AuthController {
         user.setRole("USER");
         
         // Désactiver le compte jusqu'à vérification email
-        user.setActive(false);
+        user.setActive(true);
         
         try {
             User savedUser = userService.save(user);
